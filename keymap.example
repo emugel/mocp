@@ -65,7 +65,7 @@ quit_client           = q
 quit                  = Q
 
 # Menu and interface control keys:
-go                    = ENTER
+go                    = ENTER l
 menu_down             = DOWN
 menu_up               = UP
 menu_page_down        = PAGE_DOWN
@@ -77,11 +77,11 @@ toggle_read_tags      = f
 toggle_show_time      = ^t
 toggle_show_format    = ^f
 toggle_menu           = TAB
-toggle_layout         = l
+toggle_layout         = ^l
 toggle_hidden_files   = H
 show_lyrics           = L
 theme_menu            = T
-help                  = h ?
+help                  = ?
 refresh               = ^r
 reload                = r
 
@@ -117,6 +117,7 @@ volume_90             = M-9
 
 # Directory navigation keys: defaults are Shift-number
 #                            (i.e., 'shift 1' -> '!' -> 'Fastdir1').
+upper_dir             = h
 go_to_a_directory     = i
 go_to_music_directory = m
 go_to_fast_dir1       = !

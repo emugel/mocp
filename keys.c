@@ -48,6 +48,14 @@ struct command
 /* Array of commands - each element is a list of keys for this command. */
 static struct command commands[] = {
 	{
+		KEY_CMD_GO_UPPERDIR,
+		"upper_dir",
+		"Go to parent directory",
+		CON_MENU,
+		{ CTRL('u'), -1},
+		1
+	},
+	{
 		KEY_CMD_QUIT_CLIENT,
 		"quit_client",
 		"Detach MOC from the server",

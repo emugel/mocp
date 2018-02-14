@@ -3168,6 +3168,9 @@ static void menu_key (const struct iface_key *k)
 		theme_menu_key (k);
 	else if (!iface_key_is_resize (k)) {
 		switch (cmd) {
+			case KEY_CMD_GO_UPPERDIR:
+				go_dir_up ();
+				break;
 			case KEY_CMD_QUIT_CLIENT:
 				want_quit = QUIT_CLIENT;
 				break;
