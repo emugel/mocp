@@ -86,6 +86,7 @@ lists_t_strs *lyrics_load_file (const char *filename)
 void lyrics_autoload (const char *filename)
 {
 	char *lyrics_filename, *extn;
+	char *lyrics_filename_dottxt;
 
 	assert (!raw_lyrics);
 	assert (lyrics_message);
