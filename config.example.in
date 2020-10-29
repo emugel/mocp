@@ -248,6 +248,11 @@
 # file name with any trailing "extension" removed.)
 #AutoLoadLyrics = yes
 
+# Should MOC try to autoload the default albumtext file for an audio?  (The
+# default albumtext file is a text file called album.txt 
+#
+#AutoLoadAlbumtext = yes
+
 # MOC directory (where pid file, socket and state files are stored).
 # You can use ~ at the beginning.
 #MOCDir = ~/.moc

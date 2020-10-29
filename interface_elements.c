@@ -44,6 +44,7 @@
 #include "utf8.h"
 #include "rcc.h"
 #include "lyrics.h"
+#include "albumtext.h"
 
 #ifndef PACKAGE_REVISION
 #define STARTUP_MESSAGE "Welcome to " PACKAGE_NAME \
@@ -126,6 +127,7 @@ static struct main_win
 	int too_small; /* is the terminal window too small to display mocp? */
 	int help_screen_top; /* first visible line of the help screen. */
 	int in_lyrics; /* are we displaying lyrics screen? */
+	int in_albumtext; /* are we displaying albumtext screen? */
 	int lyrics_screen_top; /* first visible line of the lyrics screen. */
 
 	struct side_menu menus[3];
@@ -965,6 +967,7 @@ static void main_win_init (struct main_win *w, lists_t_strs *layout_fmt)
 	w->curr_file = NULL;
 	w->in_help = 0;
 	w->in_lyrics = 0;
+	w->in_albumtext = 0;
 	w->too_small = 0;
 	w->help_screen_top = 0;
 	w->lyrics_screen_top = 0;
@@ -1774,7 +1777,8 @@ static void main_win_draw_lyrics_screen (const struct main_win *w)
 	wmove (w->win, 1, 0);
 	wattrset (w->win, get_color(CLR_LEGEND));
 	getmaxyx (w->win, height, width);
-	lyrics_array = lyrics_format (height, width);
+
+    lyrics_array = lyrics_format (height, width);
 	for (i = w->lyrics_screen_top; i < max_lines && i < lists_strs_size (lyrics_array); i++)
 		xwaddstr (w->win, lists_strs_at (lyrics_array, i));
 	if (i != lists_strs_size (lyrics_array)) {
@@ -1786,6 +1790,43 @@ static void main_win_draw_lyrics_screen (const struct main_win *w)
 	lists_strs_free (lyrics_array);
 }
 
+static void main_win_draw_albumtext_screen (const struct main_win *w)
+{
+	int i;
+	int max_lines;
+	int height, width;
+	lists_t_strs *albumtext_array;
+
+	assert (w != NULL);
+	assert (w->in_albumtext);
+
+	max_lines = w->lyrics_screen_top + LINES - 6;
+
+	werase (w->win);
+	wbkgd (w->win, get_color(CLR_BACKGROUND));
+
+	wmove (w->win, 0, 0);
+	if (w->lyrics_screen_top != 0) {
+		wattrset (w->win, get_color(CLR_MESSAGE));
+		xmvwaddstr (w->win, 0, COLS/2 - (sizeof("...MORE...")-1)/2,
+				"...MORE...");
+	}
+	wmove (w->win, 1, 0);
+	wattrset (w->win, get_color(CLR_LEGEND));
+	getmaxyx (w->win, height, width);
+
+    albumtext_array = albumtext_format (height, width);
+	for (i = w->lyrics_screen_top; i < max_lines && i < lists_strs_size (albumtext_array); i++)
+		xwaddstr (w->win, lists_strs_at (albumtext_array, i));
+	if (i != lists_strs_size (albumtext_array)) {
+		wattrset (w->win, get_color(CLR_MESSAGE));
+		xmvwaddstr (w->win, LINES-5,
+				COLS/2 - (sizeof("...MORE...")-1)/2,
+				"...MORE...");
+	}
+	lists_strs_free (albumtext_array);
+}
+
 static void main_win_draw (struct main_win *w)
 {
 	size_t ix;
@@ -1794,6 +1835,8 @@ static void main_win_draw (struct main_win *w)
 		main_win_draw_help_screen (w);
 	else if (w->in_lyrics)
 		main_win_draw_lyrics_screen (w);
+	else if (w->in_albumtext)
+		main_win_draw_albumtext_screen (w);
 	else if (w->too_small)
 		main_win_draw_too_small_screen (w);
 	else {
@@ -1908,6 +1951,14 @@ static void main_win_switch_to_lyrics (struct main_win *w)
 	main_win_draw (w);
 }
 
+static void main_win_switch_to_albumtext (struct main_win *w)
+{
+	assert (w != NULL);
+
+	w->in_albumtext = 1;
+	main_win_draw (w);
+}
+
 static void main_win_create_themes_menu (struct main_win *w)
 {
 	struct window_params p;
@@ -1964,6 +2015,13 @@ static int main_win_in_lyrics (const struct main_win *w)
 	assert (w != NULL);
 
 	return w->in_lyrics;
+}
+
+static int main_win_in_albumtext (const struct main_win *w)
+{
+	assert (w != NULL);
+
+	return w->in_albumtext;
 }
 
 static int main_win_in_plist_menu (const struct main_win *w)
@@ -2187,6 +2245,38 @@ static void main_win_handle_lyrics_key (struct main_win *w,
 		}
 		else if (k->key.func != KEY_RESIZE)
 			w->in_lyrics = 0;
+	}
+
+	main_win_draw (w);
+}
+
+static void main_win_handle_albumtext_key (struct main_win *w,
+		const struct iface_key *k)
+{
+	int height, width;
+	lists_t_strs *albumtext_array;
+
+	assert (w != NULL);
+	assert (w->in_albumtext);
+
+	if ((k->type == IFACE_KEY_FUNCTION && (
+					k->key.func == KEY_DOWN
+					|| k->key.func == KEY_NPAGE))
+			|| (k->key.ucs == '\n')) {
+		getmaxyx (w->win, height, width);
+		albumtext_array = albumtext_format (height, width);
+		if (w->lyrics_screen_top + LINES - 5 <= lists_strs_size (albumtext_array))
+			w->lyrics_screen_top++;
+		lists_strs_free (albumtext_array);
+	}
+	else {
+		if (k->type == IFACE_KEY_FUNCTION && (k->key.func == KEY_UP
+					|| k->key.func == KEY_PPAGE)) {
+			if (w->lyrics_screen_top > 0)
+				w->lyrics_screen_top--;
+		}
+		else if (k->key.func != KEY_RESIZE)
+			w->in_albumtext = 0;
 	}
 
 	main_win_draw (w);
@@ -3675,6 +3765,7 @@ void windows_end ()
 	windows_reset ();
 
 	lyrics_cleanup ();
+	albumtext_cleanup ();
 }
 
 static void iface_refresh_screen ()
@@ -4319,15 +4410,32 @@ int iface_in_lyrics ()
 	return main_win_in_lyrics (&main_win);
 }
 
+int iface_in_albumtext ()
+{
+	return main_win_in_albumtext (&main_win);
+}
+
 void iface_switch_to_lyrics ()
 {
 	main_win_switch_to_lyrics (&main_win);
 	iface_refresh_screen ();
 }
 
+void iface_switch_to_albumtext ()
+{
+	main_win_switch_to_albumtext (&main_win);
+	iface_refresh_screen ();
+}
+
 void iface_handle_lyrics_key (const struct iface_key *k)
 {
 	main_win_handle_lyrics_key (&main_win, k);
+	iface_refresh_screen ();
+}
+
+void iface_handle_albumtext_key (const struct iface_key *k)
+{
+	main_win_handle_albumtext_key (&main_win, k);
 	iface_refresh_screen ();
 }
 
@@ -4413,6 +4521,14 @@ void iface_load_lyrics (const char *file)
 	lyrics_cleanup ();
 	lyrics_autoload (file);
 	main_win.lyrics_screen_top = 0;
+	main_win_draw (&main_win);
+}
+
+void iface_load_albumtext (const char *file)
+{
+	albumtext_cleanup ();
+	albumtext_autoload (file);
+	main_win.lyrics_screen_top = 0; // on purpose, same var as lyrics
 	main_win_draw (&main_win);
 }
 

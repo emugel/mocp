@@ -807,6 +807,14 @@ static struct command commands[] = {
 		{ 'L',	-1 },
 		1
 	},
+	{
+		KEY_CMD_ALBUMTEXT,
+		"show_albumtext",
+		"Display text of the current album (if available. Searches for album.txt in directoy)",
+		CON_MENU,
+		{ 'T',	-1 },
+		1
+	},
  	{
  		KEY_CMD_TOGGLE_PLAYLIST_FULL_PATHS,
  		"playlist_full_paths",

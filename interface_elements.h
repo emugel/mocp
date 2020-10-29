@@ -128,8 +128,11 @@ int iface_in_help ();
 void iface_switch_to_help ();
 void iface_handle_help_key (const struct iface_key *k);
 int iface_in_lyrics ();
+int iface_in_albumtext ();
 void iface_switch_to_lyrics ();
+void iface_switch_to_albumtext ();
 void iface_handle_lyrics_key (const struct iface_key *k);
+void iface_handle_albumtext_key (const struct iface_key *k);
 void iface_toggle_layout ();
 void iface_toggle_percent ();
 void iface_swap_plist_items (const char *file1, const char *file2);
@@ -140,6 +143,7 @@ void iface_add_file (const char *file, const char *title,
 void iface_temporary_exit ();
 void iface_restore ();
 void iface_load_lyrics (const char *file);
+void iface_load_albumtext (const char *file);
 void iface_update_queue_positions (const struct plist *queue,
 		struct plist *playlist, struct plist *dir_list,
 		const char *deleted_file);
